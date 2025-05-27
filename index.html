@@ -10,46 +10,78 @@
     <div class="container">
         <header>
             <h1>🤖 LLMs.txt Generator</h1>
-            <p>Generate a structured llms.txt file for your website to help AI models understand your business better.</p>
+            <p>Generate a structured llms.txt file for your website. Enter a URL and let AI suggest the content, then edit as needed.</p>
         </header>
 
+        <div class="url-analyzer">
+            <div class="form-group">
+                <label for="analyzeUrl">Website URL</label>
+                <div class="url-input-group">
+                    <input type="url" id="analyzeUrl" name="analyzeUrl" required placeholder="https://example.com">
+                    <button type="button" id="analyzeBtn" class="btn-analyze">
+                        <span class="analyze-text">🔍 Analyze & Auto-Fill</span>
+                        <span class="analyze-loading" style="display: none;">
+                            <span class="spinner"></span> Analyzing...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <form id="llmsForm" class="form-section">
+            <div class="ai-suggestions" id="aiSuggestions" style="display: none;">
+                <div class="suggestion-header">
+                    <h3>🎯 AI Suggestions</h3>
+                    <p>Review and edit the auto-generated content below:</p>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="websiteUrl">Website URL *</label>
-                <input type="url" id="websiteUrl" name="websiteUrl" required placeholder="https://example.com">
+                <input type="url" id="websiteUrl" name="websiteUrl" required placeholder="https://example.com" readonly>
             </div>
 
             <div class="form-group">
                 <label for="businessDescription">Business Description *</label>
                 <textarea id="businessDescription" name="businessDescription" required 
                     placeholder="Describe what your business does, your mission, and key value propositions..."></textarea>
+                <div class="field-status" id="businessDescriptionStatus"></div>
             </div>
 
             <div class="form-group">
                 <label for="services">Services/Products *</label>
                 <textarea id="services" name="services" required 
                     placeholder="List your main services or products, one per line or separated by commas..."></textarea>
+                <div class="field-status" id="servicesStatus"></div>
             </div>
 
             <div class="form-group">
                 <label for="regions">Regions/Markets</label>
                 <input type="text" id="regions" name="regions" 
                     placeholder="e.g., United States, Europe, Global">
+                <div class="field-status" id="regionsStatus"></div>
             </div>
 
             <div class="form-group">
                 <label for="contactInfo">Contact Information</label>
                 <input type="text" id="contactInfo" name="contactInfo" 
                     placeholder="Email, phone, or contact page URL">
+                <div class="field-status" id="contactInfoStatus"></div>
             </div>
 
             <div class="form-group">
                 <label for="additionalInfo">Additional Information</label>
                 <textarea id="additionalInfo" name="additionalInfo" 
                     placeholder="Any other relevant information about your business, team, or special features..."></textarea>
+                <div class="field-status" id="additionalInfoStatus"></div>
             </div>
 
-            <button type="submit" class="btn-primary">Generate LLMs.txt</button>
+            <div class="form-actions">
+                <button type="button" id="regenerateBtn" class="btn-secondary" style="display: none;">
+                    🔄 Regenerate AI Suggestions
+                </button>
+                <button type="submit" class="btn-primary">Generate LLMs.txt</button>
+            </div>
         </form>
 
         <div id="outputSection" class="output-section" style="display: none;">
@@ -62,7 +94,8 @@
         </div>
 
         <footer>
-            <p>Learn more about <a href="https://llmstxt.org" target="_blank">llms.txt format</a></p>
+            <p>Learn more about <a href="https://llmstxt.org" target="_blank">llms.txt format</a> | 
+            Powered by AI web analysis</p>
         </footer>
     </div>
 
