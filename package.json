@@ -1,0 +1,31 @@
+{
+  "name": "llmstxt-generator",
+  "version": "1.0.0",
+  "description": "AI-powered LLMs.txt generator with freemium model",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build needed'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  },
+  "keywords": [
+    "llms.txt",
+    "ai",
+    "openai",
+    "stripe",
+    "freemium",
+    "business-analysis"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/glowleaf/llmstxt.git"
+  }
+} 

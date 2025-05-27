@@ -74,9 +74,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function initializeStripe() {
-        // Initialize Stripe (you'll need to replace with your publishable key)
+        // Initialize Stripe with environment variable
         if (window.Stripe) {
-            stripe = Stripe('pk_test_your_stripe_publishable_key_here');
+            // In production, this would come from your backend or be injected server-side
+            const publishableKey = getStripePublishableKey();
+            stripe = Stripe(publishableKey);
             elements = stripe.elements();
             
             // Create card element
@@ -92,6 +94,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
             });
         }
+    }
+
+    function getStripePublishableKey() {
+        // For development, you can temporarily hardcode this
+        // In production, fetch from your backend or inject server-side
+        return 'pk_test_your_stripe_publishable_key_here';
+        
+        // Better approach: fetch from backend
+        // return fetch('/api/config').then(r => r.json()).then(d => d.stripeKey);
     }
 
     async function analyzeWebsite(tier = 'free') {
@@ -284,18 +295,37 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function generatePremiumAISuggestions(url, scrapedData) {
-        // Premium tier: Real AI analysis with GPT-4
+        // Premium tier: Real AI analysis via secure backend
         try {
-            const prompt = createAIPrompt(url, scrapedData);
+            // Call our secure backend API
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    url,
+                    scrapedData,
+                    tier: 'premium'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            const data = await response.json();
             
-            // This would be a real API call to OpenAI
-            // For demo purposes, we'll simulate enhanced results
-            const aiResponse = await simulateAIResponse(prompt);
+            if (data.success) {
+                return data.suggestions;
+            } else {
+                throw new Error(data.message || 'AI analysis failed');
+            }
             
-            return parseAIResponse(aiResponse);
         } catch (error) {
             console.error('AI API error:', error);
             // Fallback to smart suggestions if AI fails
+            showError('AI analysis temporarily unavailable. Using smart analysis instead.');
             return await generateSmartSuggestions(url, scrapedData);
         }
     }
