@@ -42,6 +42,104 @@ header p {
     margin: 0 auto;
 }
 
+/* Pricing Banner */
+.pricing-banner {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    padding: 30px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.tier-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.tier {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.tier:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.tier.active {
+    border: 2px solid #10b981;
+}
+
+.premium-tier {
+    border: 2px solid #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.tier-header h3 {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    color: #1f2937;
+}
+
+.price {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #059669;
+    margin-bottom: 15px;
+}
+
+.premium-tier .price {
+    color: #d97706;
+}
+
+.price span {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.features {
+    list-style: none;
+    margin-bottom: 20px;
+}
+
+.features li {
+    padding: 6px 0;
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.tier-btn {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    font-size: 0.95rem;
+}
+
+.tier-btn.active {
+    background: #10b981;
+    color: white;
+}
+
+.tier-btn.premium {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.tier-btn.premium:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
 /* URL Analyzer Section */
 .url-analyzer {
     padding: 30px;
@@ -53,24 +151,46 @@ header p {
     display: flex;
     gap: 12px;
     align-items: stretch;
+    flex-wrap: wrap;
 }
 
 .url-input-group input {
     flex: 1;
+    min-width: 250px;
+}
+
+.analyze-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .btn-analyze {
     background: linear-gradient(135deg, #059669 0%, #10b981 100%);
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 12px 20px;
     border-radius: 8px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
-    min-width: 180px;
+    min-width: 160px;
+}
+
+.btn-ai-analyze {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    min-width: 160px;
 }
 
 .btn-analyze:hover:not(:disabled) {
@@ -78,7 +198,13 @@ header p {
     box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3);
 }
 
-.btn-analyze:disabled {
+.btn-ai-analyze:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+}
+
+.btn-analyze:disabled,
+.btn-ai-analyze:disabled {
     opacity: 0.7;
     cursor: not-allowed;
     transform: none;
@@ -108,16 +234,29 @@ header p {
     border: 1px solid #f59e0b;
 }
 
+.ai-suggestions.premium {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border: 1px solid #3b82f6;
+}
+
 .suggestion-header h3 {
     color: #92400e;
     margin-bottom: 5px;
     font-size: 1.1rem;
 }
 
+.ai-suggestions.premium .suggestion-header h3 {
+    color: #1e40af;
+}
+
 .suggestion-header p {
     color: #b45309;
     font-size: 0.9rem;
     margin: 0;
+}
+
+.ai-suggestions.premium .suggestion-header p {
+    color: #1e3a8a;
 }
 
 .form-section {
@@ -186,6 +325,17 @@ textarea {
     content: "🤖 ";
 }
 
+.field-status.premium-generated {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+    display: block;
+}
+
+.field-status.premium-generated::before {
+    content: "🚀 ";
+}
+
 .field-status.user-edited {
     background: #dbeafe;
     color: #1e40af;
@@ -240,6 +390,160 @@ textarea {
 .btn-secondary:hover {
     background: #e5e7eb;
     border-color: #d1d5db;
+}
+
+.btn-upgrade {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 10px;
+}
+
+.btn-upgrade:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px rgba(245, 158, 11, 0.3);
+}
+
+/* Payment Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+    padding: 25px 30px 15px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    color: #1f2937;
+    font-size: 1.4rem;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 5px;
+}
+
+.close-modal:hover {
+    color: #374151;
+}
+
+.modal-body {
+    padding: 25px 30px 30px;
+}
+
+.upgrade-benefits {
+    margin-bottom: 25px;
+}
+
+.upgrade-benefits h4 {
+    color: #1f2937;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.upgrade-benefits ul {
+    list-style: none;
+}
+
+.upgrade-benefits li {
+    padding: 8px 0;
+    color: #4b5563;
+    font-size: 0.95rem;
+}
+
+.price-display {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 8px;
+    border: 1px solid #f59e0b;
+}
+
+.price-amount {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #d97706;
+    display: block;
+}
+
+.price-description {
+    color: #92400e;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.card-element {
+    background: white;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.btn-pay {
+    width: 100%;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 15px;
+}
+
+.btn-pay:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(5, 150, 105, 0.3);
+}
+
+.btn-pay:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.payment-note {
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin: 0;
 }
 
 .output-section {
@@ -316,6 +620,15 @@ footer a:hover {
         font-size: 2rem;
     }
     
+    .pricing-banner {
+        padding: 20px;
+    }
+    
+    .tier-comparison {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
     .url-analyzer,
     .form-section,
     .output-section {
@@ -326,7 +639,13 @@ footer a:hover {
         flex-direction: column;
     }
     
-    .btn-analyze {
+    .analyze-buttons {
+        width: 100%;
+    }
+    
+    .btn-analyze,
+    .btn-ai-analyze {
+        flex: 1;
         min-width: auto;
     }
     
@@ -338,9 +657,21 @@ footer a:hover {
         width: 100%;
     }
     
-    .btn-secondary {
+    .btn-secondary,
+    .btn-upgrade {
         margin-bottom: 10px;
-        margin-right: 5px;
+        margin-right: 0;
+        width: 100%;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .modal-header,
+    .modal-body {
+        padding: 20px;
     }
 }
 

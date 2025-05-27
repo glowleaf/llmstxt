@@ -5,25 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLMs.txt Generator</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>🤖 LLMs.txt Generator</h1>
-            <p>Generate a structured llms.txt file for your website. Enter a URL and let AI suggest the content, then edit as needed.</p>
+            <p>Generate a structured llms.txt file for your website. Start free with smart analysis, or upgrade to AI-powered insights.</p>
         </header>
+
+        <div class="pricing-banner">
+            <div class="tier-comparison">
+                <div class="tier free-tier active">
+                    <div class="tier-header">
+                        <h3>🆓 Smart Analysis</h3>
+                        <p class="price">Free</p>
+                    </div>
+                    <ul class="features">
+                        <li>✅ Website content extraction</li>
+                        <li>✅ Pattern-based analysis</li>
+                        <li>✅ Basic field population</li>
+                        <li>✅ Download & copy features</li>
+                    </ul>
+                    <button class="tier-btn active" data-tier="free">Currently Active</button>
+                </div>
+                
+                <div class="tier premium-tier">
+                    <div class="tier-header">
+                        <h3>🚀 AI-Powered</h3>
+                        <p class="price">$2.99 <span>/analysis</span></p>
+                    </div>
+                    <ul class="features">
+                        <li>✅ Everything in Smart Analysis</li>
+                        <li>🤖 GPT-4 content understanding</li>
+                        <li>🎯 Industry-specific insights</li>
+                        <li>📝 Professional copywriting</li>
+                        <li>🔍 Competitor analysis</li>
+                        <li>💡 SEO optimization tips</li>
+                    </ul>
+                    <button class="tier-btn premium" data-tier="premium">Upgrade to AI</button>
+                </div>
+            </div>
+        </div>
 
         <div class="url-analyzer">
             <div class="form-group">
                 <label for="analyzeUrl">Website URL</label>
                 <div class="url-input-group">
                     <input type="url" id="analyzeUrl" name="analyzeUrl" required placeholder="https://example.com">
-                    <button type="button" id="analyzeBtn" class="btn-analyze">
-                        <span class="analyze-text">🔍 Analyze & Auto-Fill</span>
-                        <span class="analyze-loading" style="display: none;">
-                            <span class="spinner"></span> Analyzing...
-                        </span>
-                    </button>
+                    <div class="analyze-buttons">
+                        <button type="button" id="analyzeBtn" class="btn-analyze">
+                            <span class="analyze-text">🔍 Smart Analysis (Free)</span>
+                            <span class="analyze-loading" style="display: none;">
+                                <span class="spinner"></span> Analyzing...
+                            </span>
+                        </button>
+                        <button type="button" id="aiAnalyzeBtn" class="btn-ai-analyze" style="display: none;">
+                            <span class="ai-analyze-text">🤖 AI Analysis ($2.99)</span>
+                            <span class="ai-analyze-loading" style="display: none;">
+                                <span class="spinner"></span> AI Processing...
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -31,8 +74,8 @@
         <form id="llmsForm" class="form-section">
             <div class="ai-suggestions" id="aiSuggestions" style="display: none;">
                 <div class="suggestion-header">
-                    <h3>🎯 AI Suggestions</h3>
-                    <p>Review and edit the auto-generated content below:</p>
+                    <h3 id="suggestionTitle">🎯 Smart Analysis Results</h3>
+                    <p id="suggestionDescription">Review and edit the auto-generated content below:</p>
                 </div>
             </div>
 
@@ -78,7 +121,10 @@
 
             <div class="form-actions">
                 <button type="button" id="regenerateBtn" class="btn-secondary" style="display: none;">
-                    🔄 Regenerate AI Suggestions
+                    🔄 Regenerate Analysis
+                </button>
+                <button type="button" id="upgradeBtn" class="btn-upgrade" style="display: none;">
+                    🚀 Upgrade to AI Analysis
                 </button>
                 <button type="submit" class="btn-primary">Generate LLMs.txt</button>
             </div>
@@ -93,9 +139,51 @@
             <textarea id="output" readonly></textarea>
         </div>
 
+        <!-- Payment Modal -->
+        <div id="paymentModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🚀 Upgrade to AI Analysis</h3>
+                    <button class="close-modal" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="upgrade-benefits">
+                        <h4>What you get with AI Analysis:</h4>
+                        <ul>
+                            <li>🤖 <strong>GPT-4 Powered</strong> - Advanced language understanding</li>
+                            <li>🎯 <strong>Industry Insights</strong> - Tailored to your business sector</li>
+                            <li>📝 <strong>Professional Copy</strong> - Marketing-quality descriptions</li>
+                            <li>🔍 <strong>Deep Analysis</strong> - Understands context and nuance</li>
+                            <li>💡 <strong>SEO Tips</strong> - Optimization recommendations</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="payment-section">
+                        <div class="price-display">
+                            <span class="price-amount">$2.99</span>
+                            <span class="price-description">One-time payment for this analysis</span>
+                        </div>
+                        
+                        <div id="card-element" class="card-element">
+                            <!-- Stripe Elements will create form elements here -->
+                        </div>
+                        
+                        <button id="payBtn" class="btn-pay">
+                            <span class="pay-text">💳 Pay $2.99 & Analyze</span>
+                            <span class="pay-loading" style="display: none;">
+                                <span class="spinner"></span> Processing...
+                            </span>
+                        </button>
+                        
+                        <p class="payment-note">Secure payment powered by Stripe. No subscription, pay per use.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <footer>
             <p>Learn more about <a href="https://llmstxt.org" target="_blank">llms.txt format</a> | 
-            Powered by AI web analysis</p>
+            Powered by smart analysis & optional AI</p>
         </footer>
     </div>
 

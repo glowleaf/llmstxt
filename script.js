@@ -7,13 +7,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // New AI-powered elements
     const analyzeBtn = document.getElementById('analyzeBtn');
+    const aiAnalyzeBtn = document.getElementById('aiAnalyzeBtn');
     const analyzeUrl = document.getElementById('analyzeUrl');
     const websiteUrl = document.getElementById('websiteUrl');
     const aiSuggestions = document.getElementById('aiSuggestions');
     const regenerateBtn = document.getElementById('regenerateBtn');
+    const upgradeBtn = document.getElementById('upgradeBtn');
+    
+    // Payment modal elements
+    const paymentModal = document.getElementById('paymentModal');
+    const closeModal = document.getElementById('closeModal');
+    const payBtn = document.getElementById('payBtn');
+    
+    // Tier buttons
+    const tierBtns = document.querySelectorAll('.tier-btn');
     
     let currentAnalyzedData = null;
     let userEditedFields = new Set();
+    let currentTier = 'free';
+    let stripe = null;
+    let elements = null;
+    let cardElement = null;
+
+    // Initialize Stripe
+    initializeStripe();
 
     // Event listeners
     form.addEventListener('submit', function(e) {
@@ -23,8 +40,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     copyBtn.addEventListener('click', copyToClipboard);
     downloadBtn.addEventListener('click', downloadFile);
-    analyzeBtn.addEventListener('click', analyzeWebsite);
-    regenerateBtn.addEventListener('click', regenerateAISuggestions);
+    analyzeBtn.addEventListener('click', () => analyzeWebsite('free'));
+    aiAnalyzeBtn.addEventListener('click', () => analyzeWebsite('premium'));
+    regenerateBtn.addEventListener('click', regenerateAnalysis);
+    upgradeBtn.addEventListener('click', showPaymentModal);
+    closeModal.addEventListener('click', hidePaymentModal);
+    payBtn.addEventListener('click', processPayment);
+    
+    // Tier button listeners
+    tierBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tier = this.dataset.tier;
+            if (tier === 'premium') {
+                showPaymentModal();
+            }
+        });
+    });
+    
+    // Close modal on outside click
+    paymentModal.addEventListener('click', function(e) {
+        if (e.target === paymentModal) {
+            hidePaymentModal();
+        }
+    });
 
     // Track user edits
     const formFields = ['businessDescription', 'services', 'regions', 'contactInfo', 'additionalInfo'];
@@ -35,34 +73,70 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    async function analyzeWebsite() {
+    function initializeStripe() {
+        // Initialize Stripe (you'll need to replace with your publishable key)
+        if (window.Stripe) {
+            stripe = Stripe('pk_test_your_stripe_publishable_key_here');
+            elements = stripe.elements();
+            
+            // Create card element
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                            color: '#aab7c4',
+                        },
+                    },
+                },
+            });
+        }
+    }
+
+    async function analyzeWebsite(tier = 'free') {
         const url = analyzeUrl.value.trim();
         if (!url) {
             showError('Please enter a valid URL');
             return;
         }
 
-        setAnalyzeButtonLoading(true);
+        if (tier === 'premium') {
+            showPaymentModal();
+            return;
+        }
+
+        setAnalyzeButtonLoading(true, tier);
         
         try {
             // Step 1: Scrape website content
             const scrapedData = await scrapeWebsite(url);
             
-            // Step 2: Generate AI suggestions
-            const aiSuggestions = await generateAISuggestions(url, scrapedData);
+            // Step 2: Generate suggestions based on tier
+            let suggestions;
+            if (tier === 'premium') {
+                suggestions = await generatePremiumAISuggestions(url, scrapedData);
+            } else {
+                suggestions = await generateSmartSuggestions(url, scrapedData);
+            }
             
             // Step 3: Populate form
-            populateForm(url, aiSuggestions);
+            populateForm(url, suggestions, tier);
             
-            currentAnalyzedData = { url, scrapedData, aiSuggestions };
-            showAISuggestionsHeader();
+            currentAnalyzedData = { url, scrapedData, suggestions, tier };
+            showAnalysisResults(tier);
             regenerateBtn.style.display = 'inline-block';
+            
+            if (tier === 'free') {
+                upgradeBtn.style.display = 'inline-block';
+                aiAnalyzeBtn.style.display = 'inline-block';
+            }
             
         } catch (error) {
             console.error('Analysis error:', error);
             showError('Failed to analyze website. Please try again or fill the form manually.');
         } finally {
-            setAnalyzeButtonLoading(false);
+            setAnalyzeButtonLoading(false, tier);
         }
     }
 
@@ -188,10 +262,8 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    async function generateAISuggestions(url, scrapedData) {
-        // Simulate AI analysis - in a real implementation, this would call an AI API
-        // For now, we'll use intelligent heuristics and pattern matching
-        
+    async function generateSmartSuggestions(url, scrapedData) {
+        // Free tier: Smart heuristics and pattern matching
         const domain = new URL(url).hostname.replace('www.', '');
         const companyName = extractCompanyName(domain, scrapedData);
         
@@ -208,6 +280,69 @@ document.addEventListener('DOMContentLoaded', function() {
             regions,
             contactInfo,
             additionalInfo
+        };
+    }
+
+    async function generatePremiumAISuggestions(url, scrapedData) {
+        // Premium tier: Real AI analysis with GPT-4
+        try {
+            const prompt = createAIPrompt(url, scrapedData);
+            
+            // This would be a real API call to OpenAI
+            // For demo purposes, we'll simulate enhanced results
+            const aiResponse = await simulateAIResponse(prompt);
+            
+            return parseAIResponse(aiResponse);
+        } catch (error) {
+            console.error('AI API error:', error);
+            // Fallback to smart suggestions if AI fails
+            return await generateSmartSuggestions(url, scrapedData);
+        }
+    }
+
+    function createAIPrompt(url, scrapedData) {
+        return `
+Analyze this website and create professional business information for an llms.txt file:
+
+URL: ${url}
+Title: ${scrapedData.title}
+Meta Description: ${scrapedData.metaDescription}
+Main Content: ${scrapedData.mainContent.substring(0, 1000)}
+Navigation: ${scrapedData.navLinks.join(', ')}
+
+Please provide:
+1. A compelling business description (2-3 sentences)
+2. A list of main services/products
+3. Geographic regions served (if mentioned)
+4. Contact information summary
+5. Key business highlights or differentiators
+
+Make it professional, SEO-friendly, and suitable for AI model context.
+        `;
+    }
+
+    async function simulateAIResponse(prompt) {
+        // Simulate AI processing delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Enhanced results that would come from real AI
+        return {
+            businessDescription: "A leading technology company specializing in innovative digital solutions and cutting-edge software development. We help businesses transform their operations through strategic technology implementation and custom software solutions.",
+            services: "Custom Software Development\nDigital Transformation Consulting\nCloud Migration Services\nMobile App Development\nAI & Machine Learning Solutions\nCybersecurity Services",
+            regions: "North America, Europe, Asia-Pacific",
+            contactInfo: "contact@company.com | +1-555-0123",
+            additionalInfo: "Award-winning team with 10+ years of experience\nISO 27001 certified\nTrusted by Fortune 500 companies\nAgile development methodology"
+        };
+    }
+
+    function parseAIResponse(response) {
+        return {
+            companyName: response.companyName || "Professional Services Company",
+            businessDescription: response.businessDescription,
+            services: response.services,
+            regions: response.regions,
+            contactInfo: response.contactInfo,
+            additionalInfo: response.additionalInfo
         };
     }
 
@@ -413,11 +548,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return highlights.slice(0, 3);
     }
 
-    function populateForm(url, suggestions) {
+    function populateForm(url, suggestions, tier = 'free') {
         // Populate URL field
         websiteUrl.value = url;
         
-        // Populate other fields with AI suggestions
+        // Populate other fields with suggestions
         const fields = {
             businessDescription: suggestions.businessDescription,
             services: suggestions.services,
@@ -431,7 +566,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const field = document.getElementById(fieldId);
                 field.value = value;
                 field.classList.add('field-updated');
-                markFieldAsAIGenerated(fieldId);
+                
+                if (tier === 'premium') {
+                    markFieldAsPremiumGenerated(fieldId);
+                } else {
+                    markFieldAsSmartGenerated(fieldId);
+                }
                 
                 // Auto-resize textareas
                 if (field.tagName === 'TEXTAREA') {
@@ -445,11 +585,88 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function markFieldAsAIGenerated(fieldId) {
+    function showPaymentModal() {
+        paymentModal.style.display = 'flex';
+        
+        // Mount card element if not already mounted
+        if (cardElement && !cardElement._mounted) {
+            cardElement.mount('#card-element');
+        }
+    }
+
+    function hidePaymentModal() {
+        paymentModal.style.display = 'none';
+    }
+
+    async function processPayment() {
+        if (!stripe || !cardElement) {
+            showError('Payment system not initialized');
+            return;
+        }
+
+        setPayButtonLoading(true);
+
+        try {
+            // Create payment method
+            const {error, paymentMethod} = await stripe.createPaymentMethod({
+                type: 'card',
+                card: cardElement,
+            });
+
+            if (error) {
+                showError(error.message);
+                return;
+            }
+
+            // In a real implementation, you'd send this to your backend
+            // For demo purposes, we'll simulate a successful payment
+            await simulatePayment(paymentMethod);
+            
+            // Hide modal and run premium analysis
+            hidePaymentModal();
+            currentTier = 'premium';
+            
+            // Run premium analysis
+            await analyzeWebsite('premium');
+            
+        } catch (error) {
+            showError('Payment failed. Please try again.');
+        } finally {
+            setPayButtonLoading(false);
+        }
+    }
+
+    async function simulatePayment(paymentMethod) {
+        // Simulate payment processing
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // In reality, you'd call your backend here:
+        // const response = await fetch('/process-payment', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify({
+        //         payment_method_id: paymentMethod.id,
+        //         amount: 299, // $2.99 in cents
+        //         currency: 'usd'
+        //     })
+        // });
+        
+        return { success: true };
+    }
+
+    function markFieldAsSmartGenerated(fieldId) {
         const status = document.getElementById(fieldId + 'Status');
         if (status) {
             status.className = 'field-status ai-generated';
-            status.textContent = 'AI Generated - Click to edit';
+            status.textContent = 'Smart Analysis - Click to edit';
+        }
+    }
+
+    function markFieldAsPremiumGenerated(fieldId) {
+        const status = document.getElementById(fieldId + 'Status');
+        if (status) {
+            status.className = 'field-status premium-generated';
+            status.textContent = 'AI-Powered Analysis - Click to edit';
         }
     }
 
@@ -462,11 +679,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function showAISuggestionsHeader() {
+    function showAnalysisResults(tier) {
         aiSuggestions.style.display = 'block';
+        
+        const suggestionTitle = document.getElementById('suggestionTitle');
+        const suggestionDescription = document.getElementById('suggestionDescription');
+        
+        if (tier === 'premium') {
+            aiSuggestions.classList.add('premium');
+            suggestionTitle.textContent = '🚀 AI-Powered Analysis Results';
+            suggestionDescription.textContent = 'Professional AI-generated content ready for use:';
+        } else {
+            aiSuggestions.classList.remove('premium');
+            suggestionTitle.textContent = '🎯 Smart Analysis Results';
+            suggestionDescription.textContent = 'Review and edit the auto-generated content below:';
+        }
     }
 
-    async function regenerateAISuggestions() {
+    async function regenerateAnalysis() {
         if (!currentAnalyzedData) return;
         
         regenerateBtn.disabled = true;
@@ -474,39 +704,77 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // Clear user edited fields tracking for regeneration
-            const confirmRegenerate = confirm('This will overwrite your current content with new AI suggestions. Continue?');
+            const confirmRegenerate = confirm('This will overwrite your current content with new analysis. Continue?');
             if (!confirmRegenerate) return;
             
             userEditedFields.clear();
             
-            // Generate new suggestions
-            const newSuggestions = await generateAISuggestions(
-                currentAnalyzedData.url, 
-                currentAnalyzedData.scrapedData
-            );
+            // Generate new suggestions based on current tier
+            let newSuggestions;
+            if (currentAnalyzedData.tier === 'premium') {
+                newSuggestions = await generatePremiumAISuggestions(
+                    currentAnalyzedData.url, 
+                    currentAnalyzedData.scrapedData
+                );
+            } else {
+                newSuggestions = await generateSmartSuggestions(
+                    currentAnalyzedData.url, 
+                    currentAnalyzedData.scrapedData
+                );
+            }
             
-            populateForm(currentAnalyzedData.url, newSuggestions);
+            populateForm(currentAnalyzedData.url, newSuggestions, currentAnalyzedData.tier);
             
         } catch (error) {
-            showError('Failed to regenerate suggestions');
+            showError('Failed to regenerate analysis');
         } finally {
             regenerateBtn.disabled = false;
-            regenerateBtn.textContent = '🔄 Regenerate AI Suggestions';
+            regenerateBtn.textContent = '🔄 Regenerate Analysis';
         }
     }
 
-    function setAnalyzeButtonLoading(loading) {
-        const analyzeText = analyzeBtn.querySelector('.analyze-text');
-        const analyzeLoading = analyzeBtn.querySelector('.analyze-loading');
+    function setAnalyzeButtonLoading(loading, tier = 'free') {
+        if (tier === 'premium') {
+            const aiAnalyzeText = aiAnalyzeBtn.querySelector('.ai-analyze-text');
+            const aiAnalyzeLoading = aiAnalyzeBtn.querySelector('.ai-analyze-loading');
+            
+            if (loading) {
+                aiAnalyzeText.style.display = 'none';
+                aiAnalyzeLoading.style.display = 'inline-block';
+                aiAnalyzeBtn.disabled = true;
+            } else {
+                aiAnalyzeText.style.display = 'inline-block';
+                aiAnalyzeLoading.style.display = 'none';
+                aiAnalyzeBtn.disabled = false;
+            }
+        } else {
+            const analyzeText = analyzeBtn.querySelector('.analyze-text');
+            const analyzeLoading = analyzeBtn.querySelector('.analyze-loading');
+            
+            if (loading) {
+                analyzeText.style.display = 'none';
+                analyzeLoading.style.display = 'inline-block';
+                analyzeBtn.disabled = true;
+            } else {
+                analyzeText.style.display = 'inline-block';
+                analyzeLoading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        }
+    }
+
+    function setPayButtonLoading(loading) {
+        const payText = payBtn.querySelector('.pay-text');
+        const payLoading = payBtn.querySelector('.pay-loading');
         
         if (loading) {
-            analyzeText.style.display = 'none';
-            analyzeLoading.style.display = 'inline-block';
-            analyzeBtn.disabled = true;
+            payText.style.display = 'none';
+            payLoading.style.display = 'inline-block';
+            payBtn.disabled = true;
         } else {
-            analyzeText.style.display = 'inline-block';
-            analyzeLoading.style.display = 'none';
-            analyzeBtn.disabled = false;
+            payText.style.display = 'inline-block';
+            payLoading.style.display = 'none';
+            payBtn.disabled = false;
         }
     }
 
